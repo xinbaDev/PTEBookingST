@@ -33,43 +33,46 @@ class Scraper(object):
         self.driver.quit()
 
     def scrape(self):
-        self.driver.get(self.url)
-        a1 = self.driver.find_element_by_link_text("Pearson Test of English Academic")
-        a1.click()
+        try:
+            self.driver.get(self.url)
+            a1 = self.driver.find_element_by_link_text("Pearson Test of English Academic")
+            a1.click()
 
-        next2 = WebDriverWait(self.driver, self.load_wait_time).until(
-            ec.presence_of_element_located((By.ID, "nextButton")))
-        next2.click()
-        search_bar = WebDriverWait(self.driver, self.load_wait_time).until(
-            ec.presence_of_element_located((By.ID, "testCentersNearAddress")))
-        search_bar.send_keys(self.city)
-        search_button = self.driver.find_element_by_id("addressSearch")
-        search_button.click()
+            next2 = WebDriverWait(self.driver, self.load_wait_time).until(
+                ec.presence_of_element_located((By.ID, "nextButton")))
+            next2.click()
+            search_bar = WebDriverWait(self.driver, self.load_wait_time).until(
+                ec.presence_of_element_located((By.ID, "testCentersNearAddress")))
+            search_bar.send_keys(self.city)
+            search_button = self.driver.find_element_by_id("addressSearch")
+            search_button.click()
 
-        WebDriverWait(self.driver, self.load_wait_time).until(
-            ec.presence_of_element_located((By.ID, "selectedTestCenters:0")))
-        for i in range(self.centre_num):
-            centre = self.driver.find_element_by_id("selectedTestCenters:{0}".format(i))
-            centre.click()
-        next3 = self.driver.find_element_by_id("continueTop")
-        next3.click()
-
-        WebDriverWait(self.driver, self.load_wait_time).until(
-            ec.presence_of_element_located((By.ID, "inAccessibleCalendar")))
-
-        result_dict = {}
-        for i in range(self.centre_num):
-            centre = self.driver.find_element_by_id("calendarForm:selectedTestCenterId:{0}".format(i))
-            centre_name = self.driver.find_element_by_id("tc_name_{0}".format(centre.get_attribute("value"))).text
-            centre.click()
             WebDriverWait(self.driver, self.load_wait_time).until(
-                ec.invisibility_of_element_located((By.ID, "ui-id-4")))
+                ec.presence_of_element_located((By.ID, "selectedTestCenters:0")))
+            for i in range(self.centre_num):
+                centre = self.driver.find_element_by_id("selectedTestCenters:{0}".format(i))
+                centre.click()
+            next3 = self.driver.find_element_by_id("continueTop")
+            next3.click()
 
-            date_times_dict = {}
-            self.__get_all_active_seats_in_centre(date_times_dict, [], True)
-            if date_times_dict:
-                result_dict[centre_name] = date_times_dict
-        self.logger.info(result_dict)
+            WebDriverWait(self.driver, self.load_wait_time).until(
+                ec.presence_of_element_located((By.ID, "inAccessibleCalendar")))
+
+            result_dict = {}
+            for i in range(self.centre_num):
+                centre = self.driver.find_element_by_id("calendarForm:selectedTestCenterId:{0}".format(i))
+                centre_name = self.driver.find_element_by_id("tc_name_{0}".format(centre.get_attribute("value"))).text
+                centre.click()
+                WebDriverWait(self.driver, self.load_wait_time).until(
+                    ec.invisibility_of_element_located((By.ID, "ui-id-4")))
+
+                date_times_dict = {}
+                self.__get_all_active_seats_in_centre(date_times_dict, [], True)
+                if date_times_dict:
+                    result_dict[centre_name] = date_times_dict
+            self.logger.info(result_dict)
+        except:
+            self.driver.save_screenshot('screenshot.png')
 
         if not os.path.exists("data/"):
             os.makedirs("data/")
